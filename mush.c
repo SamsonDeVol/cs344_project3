@@ -32,15 +32,26 @@ int main(int argc, char *argv[])
     // terminate the array
     new_argv[i] = NULL;
 
-    pid_t pid = fork();
-
-    if (pid == 0){
-      execvp(new_argv[0], new_argv);
-      perror("exec");
-      exit(1);
+    if (!strcmp(new_argv[0], "cd")){
+      printf("is cd\n");
+      printf("second arg: %s\n", new_argv[1]);
+      if (chdir(new_argv[1]) != 0)
+        perror("dir");
+    }
+    else if (!strcmp(new_argv[0], "exit")){
+      exit(0);
     }
     else {
-      wait(NULL);
+      pid_t pid = fork();
+
+      if (pid == 0){
+        execvp(new_argv[0], new_argv);
+        perror("exec");
+        exit(1);
+      }
+      else {
+        wait(NULL);
+      }
     }
     
 
