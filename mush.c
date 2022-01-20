@@ -6,17 +6,22 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
-int main(int argc, char *argv[])
+int main()
 {
   char input[2048], *new_argv[128];
-  
+
   while(1)
   {
-    char *token;
     int i = 0;
+    long size = pathconf(".", _PC_PATH_MAX);
+    char *token, *buf, *ptr = NULL;
+    
+    // find cwd (Source: https://pubs.opengroup.org/onlinepubs/007904975/functions/getcwd.html)
+    if ((buf = (char *)malloc((size_t)size)) != NULL)
+      ptr = getcwd(buf, (size_t)size);
 
     // print command prompt
-    printf("samshell%% ");
+    printf("%s %% ", ptr);
     fflush(stdout);
 
     // take input
@@ -32,15 +37,16 @@ int main(int argc, char *argv[])
     // terminate the array
     new_argv[i] = NULL;
 
+    // check if first command is cd
     if (!strcmp(new_argv[0], "cd")){
-      printf("is cd\n");
-      printf("second arg: %s\n", new_argv[1]);
       if (chdir(new_argv[1]) != 0)
         perror("dir");
     }
+    // check ig first command is exit
     else if (!strcmp(new_argv[0], "exit")){
       exit(0);
     }
+    // else fork and exec process given theres no error
     else {
       pid_t pid = fork();
 
@@ -53,8 +59,5 @@ int main(int argc, char *argv[])
         wait(NULL);
       }
     }
-    
-
-  
   }
 }
